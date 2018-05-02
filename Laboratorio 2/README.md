@@ -1,4 +1,4 @@
 ## Contenido del repositorio:
-* Notebook con los tests $\chi^2$: __notebook_laboratorio_2.ipynb__
+* Notebook con los tests Chi-Cuadrado: __"notebook_laboratorio_2.ipynb"__
 * Carpeta con el informe del laboratorio 2, en formato HTML.
-* Dataset utilizado: __dataset.csv__
+* Dataset utilizado: __"dataset.csv"__
