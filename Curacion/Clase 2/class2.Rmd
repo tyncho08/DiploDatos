@@ -650,8 +650,7 @@ Pero, como encontramos la probabilidad posterior $p(c_{m}|\bar{x})$ utilizada en
 ***
 ### El Algoritmo EM
 
-$$ p(c_{m}| \bar{x})=\frac{p(\bar{x}, c_{m})}{p(\bar{x})}=\frac{p(\bar{x}| c_{m})p(c_{m})}{\sum_{m=1}^{M} p(\bar{x}|c_{m})p(c_{m})}
-$$
+$$ p(c_{m}| \bar{x})=\frac{p(\bar{x}, c_{m})}{p(\bar{x})}=\frac{p(\bar{x}| c_{m})p(c_{m})}{\sum_{m=1}^{M} p(\bar{x}|c_{m})p(c_{m})}$$
 
 lo cual puede calcularse segun el modelo inicial propuesto. Esto puede sonar a un razonamiento circular y lo es!
 Las probabilidades de los puntos pueden ser calculados si conocemos los parametros de las distribuciones 
@@ -824,5 +823,82 @@ encontrados.
 
 4- Comente la influencia de la normalizacion de los datos en los resultados del clustering.
 ***
-1- 
-***
+
+## Desarrollo:
+
+Elegimos el dataset __Chatterjee-Price Attitude__ del paquete datasets. El conjunto de datos es una encuesta a empleados administrativos de una gran organización financiera. 
+
+Los datos se agregan a partir de cuestionarios de aproximadamente 35 empleados para cada uno de los 30 departamentos (seleccionados al azar). __Las cifras dan el porcentaje de respuestas favorables a siete preguntas en cada departamento.__ 
+
+```{r echo=TRUE}
+# Cargamos la libreria de R que contiene diferentes datasets
+library(datasets)
+# Inspeccionamos el dataset "attitude"
+str(attitude)
+```
+
+```{r echo=TRUE}
+# Resumen de attitude
+summary(attitude)
+```
+
+Como dijimos anteriormente, estos datos proporcionan el porcentaje de respuestas favorables para cada departamento. Por ejemplo, en el resultado del resumen anterior, podemos ver que para las __Quejas__ entre los 30 departamentos, el porcentaje mínimo de respuestas favorables fue de 37% y el máximo fue de 90%. En otras palabras, un departamento tuvo sólo un 37% de respuestas favorables cuando se evaluaron las __Quejas__ y un departamento tuvo un 90% de respuestas favorables a la hora de evaluar las __Quejas__.
+
+Vamos a tomar un subconjunto del conjunto de datos __attitude__ y consideraremos sólo dos variables para la aplicación del algoritmo de K-means. Vamos a agrupar el conjunto de datos por __Quejas__ (Complaints) y __Aumentos__ (Raises).
+
+```{r echo=TRUE}
+# Extraemos las variables de interes
+data = attitude[,c(2,5)]
+
+# Graficamos
+plot(data, main = "Porcentaje de respuestas favorables a Quejas y Aumentos", pch =20, cex =2)
+```
+
+Con el subconjunto de datos y el gráfico anterior, podemos ver cómo se compara el puntaje de cada departamento en __Quejas__ y __Aumentos__. Podemos aplicar clusters de K-Means a este conjunto de datos e intentar asignar cada departamento a un número específico de clusters que sean "similares".
+
+```{r echo=TRUE}
+# K-Means con 2 clusters
+set.seed(7)
+km1 = kmeans(data, 2, nstart=100)
+plot(data, col =(km1$cluster +1) , main="Resultado K-Means con 2 clusters", pch=20, cex=2)
+```
+
+Una de las decisiones clave que se deben tomar al realizar el agrupamiento de K-Means es decidir el número de clústeres que se utilizarán. En la práctica, no hay una respuesta fácil y es importante probar diferentes formas y números de clusters para decidir qué opciones es la solución más útil, aplicable o interpretable.
+
+En el diagrama anterior, elegimos aleatoriamente el número de clústeres para que sean 2, sólo con fines ilustrativos.
+
+Sin embargo, una solución que se usa a menudo para identificar el __número óptimo__ de clusters se denomina método ___Elbow__ e implica la observación de un conjunto de números posibles de clusters en relación con cómo minimizan la ___suma de cuadrados__ dentro del cluster. En otras palabras, el método Elbow examina la disparidad dentro del clúster como una función del número de clusters. 
+
+A continuación hay una representación visual del método:
+
+```{r echo=TRUE}
+mydata <- data
+wss <- (nrow(mydata)-1)*sum(apply(mydata,2,var))
+  for (i in 2:15) wss[i] <- sum(kmeans(mydata,
+                                       centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Número de Clusters",
+     ylab="Suma de cuadrados dentro de los grupos",
+     main="Evaluar el número óptimo de clusters con el método Elbow",
+     pch=20, cex=2)
+```
+
+Con el método Elbow, el valor del criterio de solución (dentro de los grupos suma de cuadrados) tenderá a disminuir sustancialmente con cada aumento sucesivo en la cantidad de clusters. De forma simple, se identifica una cantidad óptima de clusters una vez que se observa muy poca variación en el trazado de la línea. Como se puede presuponer, identificar el punto en el que deja de existir una variación importante en la curva, no es un enfoque muy objetivo, sin embargo no deja de tener de validez lógica.
+
+Pero del ejemplo anterior, podemos decir que después de 4 clusters la diferencia observada en la disparidad dentro del cluster no es sustancial. En consecuencia, podemos decir con cierta confianza razonable que la cantidad óptima de clusters que se utilizarán es 4.
+
+Suponiendo que esta afirmación es válida, podemos continuar y aplicar el número identificado de clusters en el algoritmo de K-Means y trazar los resultados:
+
+```{r echo=TRUE}
+# K-Means con valor optimo de clusters, determinado con el metodo Elbow
+set.seed(7)
+km2 = kmeans(data, 4, nstart=100)
+km2
+```
+```{r echo=TRUE}
+# Graficamos los 4 clusters
+plot(data, col =(km2$cluster +1) , main="Resultado de K-Means con 4 clusters", pch=20, cex=2)
+```
+
+A partir de los resultados anteriores podemos ver que hay un conjunto relativamente bien definido de grupos de departamentos que son relativamente distintos cuando se trata de responder favorablemente en torno a __Quejas__ y __Aumentos__ en la encuesta. 
+
+Con los resultados obtenidos podemos llegar a asumir que existe una relación casi lineal entre la cantidad de quejas y la necesidad de aumentos. Más precisamente, podemos identificar un cluster en el cual ésta conclusión es más fuerte, el cluster de color VERDE, debido a que el nivel de quejas y aumentos son casi idénticos.
