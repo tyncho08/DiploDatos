@@ -2,7 +2,7 @@
 title: "Clase 4 de Mayo"
 author: "Mariano Dominguez"
 date: "April 24, 2018"
-output: beamer_presentation
+#output: beamer_presentation
  
   
 ---
@@ -752,11 +752,11 @@ persp(volcano, theta = 25, phi = 30, expand = 0.5, col = "lightblue")
 ***
 ## More Exploration
 
-* Interactive 3D Scatter Plot
-```{r echo=TRUE}
-library(rgl)
-plot3d(iris$Petal.Width, iris$Sepal.Length, iris$Sepal.Width)
-```
+#* Interactive 3D Scatter Plot
+#```{r echo=TRUE}
+#library(rgl)
+#plot3d(iris$Petal.Width, iris$Sepal.Length, iris$Sepal.Width)
+#```
 
 ***
 ## Writing plots as pdf/ps.
