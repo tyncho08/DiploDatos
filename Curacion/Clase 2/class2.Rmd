@@ -562,7 +562,9 @@ library(gmodels)
 CrossTable(x=shuffle_data_test_labels, y=shuffle_data_test_pred, prop.chisq = FALSE)
 ```
 Como se puede observar la precision a bajado levemente a 96%, pero tenemos mas casos de tumores malignos detectados como benignos lo cual no es deseable. En cuanto a los numeros que han cambiado en la diagonal no es parametro de la precision, simplemente se debe a que nuestros datos de validacion han cambiado y en este caso tenemos mas tumores malignos detectados como malignos. Con esto podemos ver que hay diferentes formas de tratar nuestro dataset antes de ingresarlo en nuestro modelo, unas mejores que otras. En este caso no se trata que una forma haya sido mejor que otra simplemente son distintas. Cabe destacar que en los casos en donde los datos vienen ordenados (por ejemplo si vinieran todos los tumores benignos primeros y los malignos despues) nuestra precision usando los datos en bruto bajaria, ya que en el entrenamiento tendriamos muchos mas tumores malignos que benignos y no seria tan representativo de lo que queremos analizar, en cambio si mezclaramos el dataset aleatoriamente la precision subiria significativamente ya que los datos serian mas representativos. En el caso anterior la diferencia de precision es pequeña debido a que el dataset original no estaba ordenado por categoria.
+
 ***
+
 ### Una breve excursion en dimensiones mas altas:
 
 **Ajustar** una funcion (como el modelo lineal) nos permite generalizar nuestra estima de la funcion 
@@ -867,7 +869,7 @@ Una de las decisiones clave que se deben tomar al realizar el agrupamiento de K-
 
 En el diagrama anterior, elegimos aleatoriamente el número de clústeres para que sean 2, sólo con fines ilustrativos.
 
-Sin embargo, una solución que se usa a menudo para identificar el __número óptimo__ de clusters se denomina método ___Elbow__ e implica la observación de un conjunto de números posibles de clusters en relación con cómo minimizan la ___suma de cuadrados__ dentro del cluster. En otras palabras, el método Elbow examina la disparidad dentro del clúster como una función del número de clusters. 
+Sin embargo, una solución que se usa a menudo para identificar el __número óptimo__ de clusters se denomina método __Elbow__ e implica la observación de un conjunto de números posibles de clusters en relación con cómo minimizan la __suma de cuadrados__ dentro del cluster. En otras palabras, el método Elbow examina la disparidad dentro del clúster como una función del número de clusters. 
 
 A continuación hay una representación visual del método:
 
