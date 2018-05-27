@@ -1,5 +1,5 @@
 # Contenido:
-1 - Documentos Extras: __docs__
-2 - Datasets: __input__
-3 - Notebooks: __notebooks__
-4 - Clases: __Análisis Exploratorio y Curación de Datos.pdf__
+* Documentos Extras: __docs__
+* Datasets: __input__
+* Notebooks: __notebooks__
+* Clases: __Análisis Exploratorio y Curación de Datos.pdf__
