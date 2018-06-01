@@ -1,0 +1,14 @@
+matplotlib
+python-utils 
+numpy 
+urllib3 
+pandas  
+gmplot
+textacy
+chardet
+ftfy 
+sklearn
+seaborn 
+scipy  
+jupyter 
+spacy  
