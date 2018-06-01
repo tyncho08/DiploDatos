@@ -1,14 +1,16 @@
 # Base image
-FROM python:3.5-slim
+FROM python:3.6-slim
 
 # Updating repository sources
 RUN apt-get update && apt-get install -y python3-pip
 RUN apt-get install -y python3-setuptools
-RUN apt-get install -y python3-dev
+#RUN apt-get install -y python3-dev
 
 COPY requirements.txt /tmp
 ADD . /tmp
 WORKDIR /tmp
+RUN pip3 install cytoolz==0.8
+RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 
 # Installing spacy Model
