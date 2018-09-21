@@ -180,7 +180,6 @@ def main():
 
     f = open("Precision/Ex2_Loss_and_Accuracy_{}.txt".format(args.experiment_name), 'w')
     f.write("Training samples {}, test_samples {}.\n".format(train_samples, test_samples))
-    f.write('Batch Size: '+str(batch_size)+'\n')
     f.write('Epochs: '+str(epochs)+'\n')
     f.write('Test Loss: '+str(scores[0])+'\n')
     f.write('Test Accuracy: '+str(scores[1])+'\n')
