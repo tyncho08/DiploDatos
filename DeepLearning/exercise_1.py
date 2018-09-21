@@ -18,8 +18,11 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 from keras.utils import plot_model
 from keras import backend as K
+import numpy as np
+
 
 def read_args():
     parser = argparse.ArgumentParser(description='Exercise 1')
@@ -36,91 +39,91 @@ def read_args():
     assert len(args.num_units) == len(args.dropout)
     return args
 
+
 def load_dataset():
     dataset = load_files('dataset/txt_sentoken', shuffle=False)
     X_train, X_test, y_train, y_test = train_test_split(
         dataset.data, dataset.target, test_size=0.25, random_state=42)
+
     print('\nTraining samples {}, test_samples {}:'.format(
         len(X_train), len(X_test)))
 
     # Apply the Tfidf vectorizer to create input matrix
-    vectorizer = TfidfVectorizer(binary=True, ngram_range=(1, 2),
-    	stop_words='english', max_df=0.7, norm='l2', vocabulary=None)
+    vectorizer = TfidfVectorizer(binary=True, ngram_range=(1, 2), stop_words='english', max_df=1.0, norm='l2', vocabulary=None)
     X_train = vectorizer.fit_transform(X_train)
     X_test = vectorizer.transform(X_test)
     return X_train, X_test, y_train, y_test
 
-def main():    
+
+def main():
     args = read_args()
+    num_classes = 2  # Binary Classification
     # Reshaping Train and Test Data
     X_train, X_test, y_train, y_test = load_dataset()
+
+    y_test_orginal = y_test
+
+    # convert class vectors to binary class matrices
+    y_train = keras.utils.to_categorical(y_train, num_classes)
+    y_test = keras.utils.to_categorical(y_test, num_classes)
+
     train_examples = X_train.shape[0]
     test_examples = X_test.shape[0]
     input_size = X_train.shape[1]
-    print('Vocabulary Size: '+str(input_size))
-    batch_size = 50 # For mini-batch gradient descent
-    num_classes = 1 # Binary Classification
+    print('Vocabulary Size: '+ str(input_size))
+    batch_size = 80 # For mini-batch gradient descent
     epochs = 50
 
     # Scaling and Reshaping
-    #scaler = StandardScaler(with_mean=False)
-    #X_train = scaler.fit_transform(X_train)
-    #X_test =  scaler.transform(X_test)
     X_train = X_train.reshape(train_examples, input_size)
     X_test = X_test.reshape(test_examples, input_size)
 
     # Early Stopping to avoid Overfitting
-    early_stop = EarlyStopping(monitor='val_loss', 
-    	min_delta=0, patience=15, verbose=1, mode='auto')
+    # early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=15, verbose=1, mode='auto')
 
     # Build the Keras model 
     # Model 1: 
     model1 = Sequential([
-        Dense(16, input_shape=(input_size,), activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-        Dense(1, activation='relu', kernel_regularizer=regularizers.l2(0.01))])
+        Dense(540, input_shape=(input_size,), activation='relu', kernel_regularizer=regularizers.l2(0.01)),
+        Dropout(0.1),
+        Dense(2, activation='sigmoid')])
     
     # Model 2: 
     model2 = Sequential([
-        Dense(32, input_shape=(input_size,), activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-        Dense(1, activation='relu', kernel_regularizer=regularizers.l2(0.01))])
+        Dense(540, input_shape=(input_size,), activation='relu', kernel_regularizer=regularizers.l2(0.01)),
+        Dropout(0.1),
+        Dense(520, input_shape=(input_size,), activation='relu', kernel_regularizer=regularizers.l2(0.01)),
+        Dropout(0.1),
+        Dense(2, activation='sigmoid')])
     
     # Model 3: 
     model3 = Sequential([
-        Dense(16, input_shape=(input_size,), activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-        Dropout(0.5),
-        Dense(8, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-        Dropout(0.5),
-        Dense(1, activation='relu', kernel_regularizer=regularizers.l2(0.01)) 
+        Dense(540, input_shape=(input_size,), activation='relu', kernel_regularizer=regularizers.l2(0.01)),
+        Dropout(0.1),
+        Dense(420, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
+        Dropout(0.1),
+        Dense(380, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
+        Dropout(0.1),
+        Dense(2, activation='sigmoid')
     ])
 
-    # Model 4: 
-    model4 = Sequential([
-        Dense(64, input_shape=(input_size,), activation='relu'),
-        Dense(1, activation='relu')])
-
-    # Model 5: 
-    model5 = Sequential([
-        Dense(16, input_shape=(input_size,), activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-        Dense(16, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-        Dense(1, activation='relu', kernel_regularizer=regularizers.l2(0.01))])
+    if args.experiment_name == 'Modelo_1':
+        model = model1
+    elif args.experiment_name == 'Modelo_2':
+        model = model2
+    elif args.experiment_name == 'Modelo_3':
+        model = model3
     
-
-    model = model5
-
     # Printing Model Resume
     print(model.summary())
     
     # Compiling the Model
-    model.compile(loss='binary_crossentropy',
-          optimizer='adam', 
-          metrics=['accuracy']) 
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     plot_model(model, to_file="Modelos/Fig_Model_{}.png".format(args.experiment_name))
     
     # Fitting the Model
-    history = model.fit(X_train, y_train, 
-          batch_size=batch_size, epochs=epochs, 
-          validation_data=(X_test, y_test), verbose=1,
-          callbacks=[early_stop]);
+    history = model.fit(X_train, y_train, batch_size=batch_size,
+                        epochs=epochs, validation_split=0.1, verbose=1)
 
     # List all data in history
     #print(history.history.keys())
@@ -141,12 +144,11 @@ def main():
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
-    plt.show()
+    #plt.show()
     fig.savefig("Resultados/Analisis_Overfitting_{}.png".format(args.experiment_name))
 
     # Evaluation of the Model
     predictions = model.predict(X_test)
-    rounded = [round(x[0]) for x in predictions]
     scores = model.evaluate(X_test, y_test)
     print('\n')
     print('Test Loss:', scores[0])
@@ -163,12 +165,15 @@ def main():
     # Saving the Model.
     model.save("Modelos/Modelo_{}.h5".format(args.experiment_name))
 
+    predictions_list = []
+    for pred in predictions:
+        predictions_list.append(np.argmax(pred))
+
     # Saving the Predictions:
-    results = pandas.DataFrame(y_test, columns=['True_Label'])
-    results.loc[:, 'Predicted'] = predictions
-    results.loc[:, 'Rounded'] =rounded
-    results.to_csv("Resultados/Predicitions_{}.csv".format(args.experiment_name),
-                        index=False)
+    results = pandas.DataFrame(y_test_orginal, columns=['True_Label'])
+    results.loc[:, 'Predicted'] = np.array(predictions_list)
+    results.to_csv("Resultados/Predicitions_{}.csv".format(args.experiment_name), index=False)
+
 
 if __name__ == '__main__':
     main()

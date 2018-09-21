@@ -13,6 +13,9 @@ from keras import optimizers, regularizers
 from keras.utils import plot_model
 from keras.layers import Activation, Dense, Dropout
 import matplotlib.pyplot as plt
+import numpy as np
+plt.switch_backend('agg')
+
 
 def read_args():
     parser = argparse.ArgumentParser(description='Exercise 2')
@@ -31,6 +34,7 @@ def read_args():
     assert len(args.num_units) == len(args.dropout)
     return args
 
+
 def load_dataset():
     dataset = load_files('dataset/txt_sentoken', shuffle=False)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -38,6 +42,7 @@ def load_dataset():
     print('Training samples {}, test_samples {}'.format(
         len(X_train), len(X_test)))
     return X_train, X_test, y_train, y_test
+
 
 def transform_input(instances, mapping):
     """Replaces the words in instances with their index in mapping.
@@ -56,16 +61,20 @@ def transform_input(instances, mapping):
     from keras.preprocessing.sequence import pad_sequences
     return pad_sequences(word_indices)
 
+
 def main():
     args = read_args()
-    X_train, X_test, y_train, y_test_orginal = load_dataset()
+    X_train, X_test, y_train, y_test = load_dataset()
+
+    y_test_orginal = y_test
+
     train_samples = len(X_train)
     test_samples = len(X_test)
 
     # Converting labels to categorical
     num_classes = 2
     y_train = keras.utils.to_categorical(y_train, num_classes)
-    y_test_orginal = keras.utils.to_categorical(y_test_orginal, num_classes)
+    y_test = keras.utils.to_categorical(y_test, num_classes)
 
     # Load the filtered FastText word vectors, using only the vocabulary in
     # the movie reviews dataset
@@ -88,17 +97,8 @@ def main():
     X_test = transform_input(X_test, filtered_fasttext.word2index)
 
     print(X_train.shape)
-    #print(X_test.shape)
-    #print(filtered_fasttext.wv.shape[0])
-    #print(filtered_fasttext.wv.shape[1])
     
-    '''word_indices = []
-    for instance in X_train:
-        print(instance)
-        word_indices.append([filtered_fasttext.word2index[word.decode('utf-8')] for word in instance.split()])
-    # Check consistency
-    assert len(X_train[0].split()) == len(word_indices[0])'''
-    #print(filtered_fasttext.wv)
+
     # The input is ready, start the model
     model = Sequential()
     model.add(Embedding(
@@ -118,47 +118,39 @@ def main():
     # on the second dimension. We wrap this operation on a Lambda
     # layer to include it into the model.
     model.add(Lambda(lambda xin: K.mean(xin, axis=1), name='embedding_average'))
-    #model.add(Flatten())
+
     # Now the output shape is (batch_size (?), embedding_size)
 
     # Finishing the Keras model
-    model.add(Dense(512, activation='relu'))
-    model.add(Dense(1024, activation='relu'))
-    model.add(Dense(512, activation='relu'))
-    model.add(Dense(256, activation='relu'))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(2, activation='softmax'))
+    model.add(Dense(300, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dropout(0.1))
+    model.add(Dense(300, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dropout(0.1))
+    model.add(Dense(250, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dropout(0.1))
+    model.add(Dense(120, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dropout(0.1))
+    model.add(Dense(80, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dropout(0.1))
+    model.add(Dense(40, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dense(2, activation='sigmoid'))
 
     # Printing Model Resume
     print(model.summary())
 
     # Compiling the Model
-    model.compile(loss='categorical_crossentropy',
-          optimizer='adam',
-          metrics=['accuracy']) 
-    #plot_model(model, to_file="Modelos/Fig_Model_{}.png".format(args.experiment_name))
-    
+    model.compile(loss='binary_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+
+    plot_model(model, to_file="Modelos/Ex2_Fig_Model.png")
+
     # Fitting the Model
-    batch_size = 100
+    #batch_size = 300
     epochs = 300
-    history = model.fit(X_train, y_train, 
-          batch_size=batch_size, epochs=epochs, 
-          validation_split=0.1, verbose=1);    
-
-    # TODO 4: Evaluate the model, calculating the metrics.
-    # Option 1: Use the model.evaluate() method. For this, the model must be
-    # already compiled with the metrics.
-    # performance = model.evaluate(transform_input(X_test), y_test)
-
-    # Option 2: Use the model.predict() method and calculate the metrics using
-    # sklearn. We recommend this, because you can store the predictions if
-    # you need more analysis later. Also, if you calculate the metrics on a
-    # notebook, then you can compare multiple classifiers.
-    # predictions = ...
-    # performance = ...
+    history = model.fit(X_train, y_train, epochs=epochs, validation_split=0.1, verbose=1)
 
     # List all data in history
-    #print(history.history.keys())
     # Summarize history for accuracy
     fig = plt.figure()
     plt.subplot(121)
@@ -176,18 +168,17 @@ def main():
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
-    plt.show()
+    # plt.show()
     fig.savefig("Resultados/Ex2_Analisis_Overfitting_{}.png".format(args.experiment_name))
 
     # Evaluation of the Model
     predictions = model.predict(X_test)
-    rounded = [round(x[0]) for x in predictions]
-    scores = model.evaluate(X_test, y_test_orginal)
+    scores = model.evaluate(X_test, y_test)
     print('\n')
     print('Test Loss:', scores[0])
     print('Test Accuracy:', scores[1])
 
-    f = open("Precision/Ex2_Loss_and_Accuracy_{}.txt".format(args.experiment_name),'w')
+    f = open("Precision/Ex2_Loss_and_Accuracy_{}.txt".format(args.experiment_name), 'w')
     f.write("Training samples {}, test_samples {}.\n".format(train_samples, test_samples))
     f.write('Batch Size: '+str(batch_size)+'\n')
     f.write('Epochs: '+str(epochs)+'\n')
@@ -198,12 +189,15 @@ def main():
     # Saving the Model.
     model.save("Modelos/Ex2_Modelo_{}.h5".format(args.experiment_name))
 
+    predictions_list = []
+    for pred in predictions:
+        predictions_list.append(np.argmax(pred))
+
     # Saving the Predictions:
-    #results = pandas.DataFrame(y_test_orginal, columns=['True_Label'])
-    #results.loc[:, 'Predicted'] = predictions
-    #results.loc[:, 'Rounded'] = rounded
-    #results.to_csv("Resultados/Ex2_Predicitions_{}.csv".format(args.experiment_name),
-    #                    index=False)
+    results = pandas.DataFrame(y_test_orginal, columns=['True_Label'])
+    results.loc[:, 'Predicted'] = np.array(predictions_list)
+    results.to_csv("Resultados/Ex2_Predicitions_{}.csv".format(args.experiment_name), index=False)
+
 
 if __name__ == '__main__':
     main()

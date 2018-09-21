@@ -1,5 +1,5 @@
 Training samples 1500, test_samples 500.
-Batch Size: 50
+Batch Size: 80
 Epochs: 50
-Test Loss: 0.8625212993621826
-Test Accuracy: 0.764
+Test Loss: 1.1000090503692628
+Test Accuracy: 0.7149999990463257
