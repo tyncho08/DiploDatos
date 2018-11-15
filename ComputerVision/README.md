@@ -1,6 +1,6 @@
-# VisionPorComputadoras: Final Lab
+# Vision por Computadoras: Laboratorio Final
 
-Alumnos:
+## Alumnos:
 
 - Martín Gonella
 - Maximiliano Armesto
